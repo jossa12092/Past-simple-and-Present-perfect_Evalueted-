@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Past Simple vs Present Perfect — Affirmative & Negative</title>
+<style>
+  :root{
+    --bg1:#0ea5e9; /* cyan */
+    --bg2:#a78bfa; /* violet */
+    --card:#ffffff;
+    --text:#0f172a;
+    --accent:#f59e0b; /* amber */
+    --good:#16a34a;
+    --bad:#dc2626;
+  }
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--text);
+  }
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    padding:16px;
+  }
+  .card{
+    background: var(--card);
+    border-radius:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+    padding:20px;
+  }
+  h1{
+    font-size:26px;
+    line-height:1.2;
+    margin:0 0 8px 0;
+    color:#0b1324;
+    text-shadow: 0 2px 8px rgba(255,255,255,.6);
+  }
+  .subtitle{
+    font-size:15px;
+    color:#334155;
+    margin-bottom:14px;
+  }
+  .start-btn, .option{
+    display:block;
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    transition: transform .06s ease-in, box-shadow .06s ease-in;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+  }
+  .start-btn{
+    background: linear-gradient(90deg, #10b981, #22d3ee);
+    color:white;
+    margin-top:8px;
+  }
+  .start-btn:active, .option:active{ transform: scale(.98); }
+  .question-box{
+    border-radius:16px;
+    padding:16px;
+    margin:8px 0 16px 0;
+    background: linear-gradient(90deg, #f43f5e, #f97316, #eab308);
+    color:#0b1324;
+    font-weight:800;
+    font-size:20px;
+    text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  }
+  .instruction{
+    background:#ecfeff;
+    border:2px dashed #22d3ee;
+    color:#0c4a6e;
+    padding:10px 12px;
+    border-radius:12px;
+    font-size:15px;
+    margin:8px 0 12px 0;
+  }
+  .meta{
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center;
+    font-size:14px; 
+    color:#475569;
+    margin-bottom:8px;
+  }
+  .pill{
+    padding:6px 10px;
+    border-radius:999px;
+    background:#e0f2fe;
+    color:#075985;
+    font-weight:700;
+  }
+  .option{
+    margin:10px 0;
+    text-align:left;
+    background:#f0f9ff;
+    color:#0b1324;
+    border:3px solid #60a5fa;
+  }
+  .option:hover{ box-shadow:0 6px 14px rgba(2,132,199,.25); }
+  .option.correct{ border-color: var(--good); background:#ecfdf5;}
+  .option.wrong{ border-color: var(--bad); background:#fef2f2;}
+  .feedback{
+    margin-top:8px;
+    font-size:18px;
+    font-weight:800;
+  }
+  .feedback.good{ color: var(--good); }
+  .feedback.bad{ color: var(--bad); }
+  .hidden{ display:none; }
+  #score{
+    font-size:24px;
+    color:#065f46;
+    font-weight:900;
+  }
+  /* Mobile friendly tweaks */
+  @media (max-width:420px){
+    h1{ font-size:22px; }
+    .question-box{ font-size:18px; }
+    .option{ font-size:17px; }
+  }
+</style>
+</head>
+<body oncontextmenu="return false">
+<div id="app">
+  <div id="intro" class="card">
+    <h1>Past Simple vs Present Perfect</h1>
+    <div class="subtitle">Affirmative & Negative only • A1 → A2 vocabulary • Mobile-ready</div>
+    <div class="instruction">
+      You will answer <strong>25 items</strong> about Past Simple and Present Perfect. 
+      All items use <strong>affirmative or negative</strong> sentences (no questions). 
+      Read the instruction on each card, <strong>choose the correct sentence</strong>, get instant feedback, and continue automatically.
+    </div>
+    <button class="start-btn" onclick="startQuiz()">START</button>
+  </div>
+
+  <div id="quiz" class="card hidden">
+    <div class="meta">
+      <div id="progress" class="pill">1 / 25</div>
+      <div id="level" class="pill">Level: A1</div>
+    </div>
+    <div id="qtype" class="pill" style="margin-bottom:8px;">Type: Multiple choice</div>
+    <div id="instruction" class="instruction">Instruction goes here</div>
+    <div id="question" class="question-box">Question text</div>
+    <div id="options"></div>
+    <div id="feedback" class="feedback hidden"></div>
+  </div>
+
+  <div id="result" class="card hidden">
+    <h1>Your Final Score</h1>
+    <p id="score"></p>
+    <div class="instruction">
+      Grading scale: 1.0 – 5.0 (Colombian scale). No restart is provided by design.
+    </div>
+  </div>
+</div>
+
+<script>
+// Basic attempt to discourage screenshots (non‑foolproof)
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'PrintScreen') {
+    navigator.clipboard.writeText('');
+    alert('Screenshot blocked 🚫');
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) location.reload();
+});
+
+// Utility: shuffle
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// Question bank (Affirmative/Negative only; A1→A2; types indicated; no drag)
+const BANK = [
+ // A1 — simpler verbs, clear time markers
+ {level:"A1", type:"Multiple choice", instr:"Choose the correct AFFIRMATIVE sentence (Past Simple vs Present Perfect).", 
+  stem:"I ____ (visit) London in 2019.", options:[
+    "I visited London in 2019.", "I have visited London in 2019.", "I have visit London in 2019."
+  ], answer:"I visited London in 2019."},
+ {level:"A1", type:"Multiple choice", instr:"Choose the correct NEGATIVE sentence (Past Simple vs Present Perfect).", 
+  stem:"She ____ (not eat) pizza yesterday.", options:[
+    "She hasn't eaten pizza yesterday.", "She didn't eat pizza yesterday.", "She not ate pizza yesterday."
+  ], answer:"She didn't eat pizza yesterday."},
+ {level:"A1", type:"Multiple choice", instr:"Pick the correct sentence.", 
+  stem:"We ____ (see) that movie before.", options:[
+    "We have seen that movie before.", "We saw that movie before in 2010.", "We seen that movie before."
+  ], answer:"We have seen that movie before."},
+ {level:"A1", type:"Matching (select one)", instr:"Select the sentence that correctly uses Past Simple with a finished time.", 
+  stem:"_____ (finish time marker).", options:[
+    "He has finished his project last night.", "He finished his project last night.", "He have finished his project last night."
+  ], answer:"He finished his project last night."},
+ {level:"A1", type:"Organize (select best)", instr:"Select the best NEGATIVE sentence (correct tense & form).", 
+  stem:"They ____ (not be) at home last weekend.", options:[
+    "They weren't at home last weekend.", "They haven't been at home last weekend.", "They didn't been at home last weekend."
+  ], answer:"They weren't at home last weekend."},
+
+ // A1→A2 bridge
+ {level:"A1", type:"Multiple choice", instr:"Choose the correct AFFIRMATIVE sentence.", 
+  stem:"I ____ (lose) my keys, so I can't open the door now.", options:[
+    "I lost my keys, so I can't open the door now.", "I have lost my keys, so I can't open the door now.", "I have lose my keys, so I can't open the door now."
+  ], answer:"I have lost my keys, so I can't open the door now."},
+ {level:"A1", type:"Matching (select one)", instr:"Select the correct sentence with a finished time (yesterday).", 
+  stem:"____ (yesterday).", options:[
+    "We haven't cleaned the room yesterday.", "We didn't clean the room yesterday.", "We haven't clean the room yesterday."
+  ], answer:"We didn't clean the room yesterday."},
+ {level:"A1", type:"Organize (select best)", instr:"Pick the correct AFFIRMATIVE sentence (experience up to now).", 
+  stem:"She ____ (visit) many countries.", options:[
+    "She visited many countries.", "She has visited many countries.", "She has visit many countries."
+  ], answer:"She has visited many countries."},
+ {level:"A1", type:"Multiple choice", instr:"Choose the correct NEGATIVE sentence (unfinished time: today).", 
+  stem:"I ____ (not see) him today.", options:[
+    "I didn't see him today.", "I haven't seen him today.", "I haven't saw him today."
+  ], answer:"I haven't seen him today."},
+ {level:"A1", type:"Multiple choice", instr:"Choose the correct AFFIRMATIVE sentence (finished time).", 
+  stem:"They ____ (arrive) two hours ago.", options:[
+    "They have arrived two hours ago.", "They arrived two hours ago.", "They has arrived two hours ago."
+  ], answer:"They arrived two hours ago."},
+
+ // A2 — include since/for, ever/never as adverbs inside statements (no questions)
+ {level:"A2", type:"Multiple choice", instr:"Select the correct AFFIRMATIVE sentence with 'since/for'.", 
+  stem:"She ____ (live) here ____ 2018.", options:[
+    "She lived here since 2018.", "She has lived here since 2018.", "She has live here since 2018."
+  ], answer:"She has lived here since 2018."},
+ {level:"A2", type:"Matching (select one)", instr:"Select the correct NEGATIVE with 'for' (unfinished time).", 
+  stem:"He ____ (not call) me ____ two weeks.", options:[
+    "He didn't call me for two weeks (now).", "He hasn't called me for two weeks.", "He hasn't call me for two weeks."
+  ], answer:"He hasn't called me for two weeks."},
+ {level:"A2", type:"Organize (select best)", instr:"Choose the correct AFFIRMATIVE statement (life experience).", 
+  stem:"I ____ (never / try) sushi.", options:[
+    "I never tried sushi.", "I have never tried sushi.", "I have never try sushi."
+  ], answer:"I have never tried sushi."},
+ {level:"A2", type:"Multiple choice", instr:"Pick the correct NEGATIVE sentence (finished time: last year).", 
+  stem:"We ____ (not travel) abroad last year.", options:[
+    "We didn't travel abroad last year.", "We haven't traveled abroad last year.", "We haven't travel abroad last year."
+  ], answer:"We didn't travel abroad last year."},
+ {level:"A2", type:"Multiple choice", instr:"Pick the correct AFFIRMATIVE sentence (recent result).", 
+  stem:"She ____ (just / finish) the report.", options:[
+    "She has just finished the report.", "She just finished the report (now).", "She has just finish the report."
+  ], answer:"She has just finished the report."},
+ {level:"A2", type:"Matching (select one)", instr:"Select the correct NEGATIVE sentence (still true now).", 
+  stem:"They ____ (not complete) the task yet.", options:[
+    "They haven't completed the task yet.", "They didn't complete the task yet.", "They haven't complete the task yet."
+  ], answer:"They haven't completed the task yet."},
+ {level:"A2", type:"Organize (select best)", instr:"Choose the correct AFFIRMATIVE sentence (with 'already').", 
+  stem:"We ____ (already / see) that film.", options:[
+    "We already saw that film (now).", "We have already seen that film.", "We have already see that film."
+  ], answer:"We have already seen that film."},
+ {level:"A2", type:"Multiple choice", instr:"Pick the correct NEGATIVE sentence (since).", 
+  stem:"I ____ (not be) at the gym since June.", options:[
+    "I haven't been at the gym since June.", "I didn't be at the gym since June.", "I wasn't at the gym since June (now)."
+  ], answer:"I haven't been at the gym since June."},
+ {level:"A2", type:"Multiple choice", instr:"Select the correct AFFIRMATIVE sentence (finished time: in 2020).", 
+  stem:"My brother ____ (graduate) in 2020.", options:[
+    "My brother has graduated in 2020.", "My brother graduated in 2020.", "My brother has graduate in 2020."
+  ], answer:"My brother graduated in 2020."},
+ {level:"A2", type:"Matching (select one)", instr:"Choose the correct NEGATIVE (unfinished time: this week).", 
+  stem:"I ____ (not finish) my readings this week.", options:[
+    "I didn't finish my readings this week.", "I haven't finished my readings this week.", "I haven't finish my readings this week."
+  ], answer:"I haven't finished my readings this week."},
+
+ // A2 — final stretch
+ {level:"A2", type:"Multiple choice", instr:"Select the correct AFFIRMATIVE sentence (experience up to now).", 
+  stem:"She ____ (be) to Mexico three times.", options:[
+    "She has been to Mexico three times.", "She was to Mexico three times.", "She has be to Mexico three times."
+  ], answer:"She has been to Mexico three times."},
+ {level:"A2", type:"Organize (select best)", instr:"Select the correct NEGATIVE sentence (finished time: last night).", 
+  stem:"They ____ (not watch) the match last night.", options:[
+    "They haven't watched the match last night.", "They didn't watch the match last night.", "They didn't watched the match last night."
+  ], answer:"They didn't watch the match last night."},
+ {level:"A2", type:"Multiple choice", instr:"Pick the correct AFFIRMATIVE sentence (state up to now).", 
+  stem:"We ____ (know) each other for years.", options:[
+    "We have known each other for years.", "We knew each other for years (now).", "We have know each other for years."
+  ], answer:"We have known each other for years."},
+ {level:"A2", type:"Matching (select one)", instr:"Choose the correct NEGATIVE sentence (recent).", 
+  stem:"I ____ (not check) my email yet.", options:[
+    "I haven't checked my email yet.", "I didn't checked my email yet.", "I haven't check my email yet."
+  ], answer:"I haven't checked my email yet."},
+ {level:"A2", type:"Multiple choice", instr:"Select the correct AFFIRMATIVE sentence (finished time).", 
+  stem:"He ____ (buy) a new phone two days ago.", options:[
+    "He bought a new phone two days ago.", "He has bought a new phone two days ago.", "He has buy a new phone two days ago."
+  ], answer:"He bought a new phone two days ago."}
+];
+
+// Build quiz state
+let QUESTIONS = [];
+let current = 0;
+let score = 0;
+
+function startQuiz(){
+  // build and shuffle
+  QUESTIONS = shuffle(BANK.slice(0)); // copy
+  current = 0;
+  score = 0;
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  render();
+}
+
+function render(){
+  if(current >= QUESTIONS.length){ return finish(); }
+  const q = QUESTIONS[current];
+  document.getElementById('progress').textContent = `${current+1} / ${QUESTIONS.length}`;
+  document.getElementById('level').textContent = `Level: ${q.level}`;
+  document.getElementById('qtype').textContent = `Type: ${q.type}`;
+  document.getElementById('instruction').textContent = q.instr;
+  document.getElementById('question').textContent = `${q.stem}`;
+
+  const opts = shuffle(q.options.slice(0));
+  const optsContainer = document.getElementById('options');
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback hidden';
+  feedback.textContent = '';
+  optsContainer.innerHTML = '';
+
+  opts.forEach(text=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = text;
+    btn.onclick = ()=>{
+      // lock buttons
+      Array.from(document.getElementsByClassName('option')).forEach(b=>b.disabled=true);
+      const isCorrect = text === q.answer;
+      if(isCorrect){ score++; btn.classList.add('correct'); feedback.className='feedback good'; feedback.textContent='✅ Correct!'; }
+      else { btn.classList.add('wrong'); feedback.className='feedback bad'; feedback.textContent='❌ Incorrect.'; 
+        // also highlight correct one
+        Array.from(document.getElementsByClassName('option')).forEach(b=>{
+          if(b.textContent===q.answer){ b.classList.add('correct'); }
+        });
+      }
+      setTimeout(()=>{ current++; render(); }, 1200);
+    };
+    optsContainer.appendChild(btn);
+  });
+}
+
+function finish(){
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  const final = (score/QUESTIONS.length)*5;
+  document.getElementById('score').textContent = `Score: ${final.toFixed(1)} / 5.0   •   Correct: ${score} / ${QUESTIONS.length}`;
+}
+</script>
+</body>
+</html>
